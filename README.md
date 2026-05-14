@@ -1,6 +1,6 @@
-# EchoBot
+# ZhapBot
 
-EchoBot is a Telegram bot built with `aiogram` that uses Gemini for AI conversations, stores chat history in SQLite, and provides file-to-PDF conversion features.
+ZhapBot is a Telegram bot built with `aiogram` that uses Gemini for AI conversations, stores chat history in SQLite, and provides file-to-PDF conversion features.
 
 ## Features
 
