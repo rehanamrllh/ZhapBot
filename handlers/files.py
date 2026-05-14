@@ -1,3 +1,4 @@
+import logging
 import os
 import asyncio
 from aiogram import Router, F, Bot
@@ -6,8 +7,10 @@ from aiogram.fsm.context import FSMContext
 from states import ConvertPDFStates
 from utils.pdf_converter import convert_image_to_pdf, convert_images_to_pdf, convert_text_to_pdf
 
+logger = logging.getLogger(__name__)
 router = Router()
 
+# Delay briefly so Telegram can finish delivering all messages that belong to the same media group.
 ALBUM_COLLECTION_DELAY_SECONDS = 2.0
 ALBUM_DATA = {}
 
@@ -44,8 +47,9 @@ async def process_album(media_group_id: str, chat_id: int, bot: Bot, state: FSMC
             await status_msg.delete()
         except Exception:
             pass
-    except Exception as e:
-        await bot.send_message(chat_id, f"Terjadi kesalahan saat konversi album: {e}")
+    except Exception:
+        logger.exception("Terjadi kesalahan saat konversi album untuk chat %s", chat_id)
+        await bot.send_message(chat_id, "Terjadi kesalahan saat konversi album. Silakan coba lagi.")
     finally:
         for p in file_paths:
             if os.path.exists(p):
@@ -84,8 +88,9 @@ async def handle_photo_to_pdf(message: Message, state: FSMContext, bot: Bot):
         await convert_image_to_pdf(file_path, output_pdf_path)
         pdf_file = FSInputFile(output_pdf_path, filename="Converted_Image.pdf")
         await message.answer_document(pdf_file, caption="Ini adalah file PDF Anda!")
-    except Exception as e:
-        await message.answer(f"Terjadi kesalahan saat konversi: {e}")
+    except Exception:
+        logger.exception("Terjadi kesalahan saat konversi foto untuk chat %s", message.chat.id)
+        await message.answer("Terjadi kesalahan saat konversi. Silakan coba lagi.")
     finally:
         # Bersihkan file sementara
         if os.path.exists(file_path):
@@ -123,8 +128,9 @@ async def handle_document_to_pdf(message: Message, state: FSMContext, bot: Bot):
             await convert_image_to_pdf(file_path, output_pdf_path)
             pdf_file = FSInputFile(output_pdf_path, filename="Converted_Image.pdf")
             await message.answer_document(pdf_file, caption="Ini adalah file PDF Anda!")
-        except Exception as e:
-            await message.answer(f"Terjadi kesalahan saat konversi: {e}")
+        except Exception:
+            logger.exception("Terjadi kesalahan saat konversi dokumen gambar untuk chat %s", message.chat.id)
+            await message.answer("Terjadi kesalahan saat konversi. Silakan coba lagi.")
         finally:
             if os.path.exists(file_path):
                 os.remove(file_path)
@@ -144,8 +150,9 @@ async def handle_document_to_pdf(message: Message, state: FSMContext, bot: Bot):
             await convert_text_to_pdf(file_path, output_pdf_path)
             pdf_file = FSInputFile(output_pdf_path, filename="Converted_Text.pdf")
             await message.answer_document(pdf_file, caption="Ini adalah file PDF Anda!")
-        except Exception as e:
-            await message.answer(f"Terjadi kesalahan saat konversi teks: {e}")
+        except Exception:
+            logger.exception("Terjadi kesalahan saat konversi teks untuk chat %s", message.chat.id)
+            await message.answer("Terjadi kesalahan saat konversi teks. Silakan coba lagi.")
         finally:
             if os.path.exists(file_path):
                 os.remove(file_path)
